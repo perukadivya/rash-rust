@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="position:relative;z-index:1;">
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <h2 style="display:inline-flex;align-items:center;gap:0.75rem;"><i class="fas fa-chart-line"
+                    style="background:var(--accent-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>
+                Interactive Data Plotter</h2>
+            <p class="mb-1">Upload CSV or Excel files and create beautiful interactive charts instantly.</p>
+            <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;"><span class="plotter-badge"><i
+                        class="fas fa-file-csv"></i> CSV</span><span class="plotter-badge"><i
+                        class="fas fa-file-excel"></i> XLSX / XLS</span><span class="plotter-badge"><i
+                        class="fas fa-chart-pie"></i> 10 Chart Types</span><span class="plotter-badge"><i
+                        class="fas fa-layer-group"></i> Multi-Series</span><span class="plotter-badge"><i
+                        class="fas fa-download"></i> Export</span></div>
+        </div>
+    </div>
+    <div class="row plotter-fade-in">
+        <div class="col-12">
+            <div class="card mb-4" style="overflow:visible;">
+                <div class="card-header"><span><i class="fas fa-cloud-upload-alt"></i> Upload Data File</span><span
+                        id="file-badge" class="plotter-file-badge" style="display:none;"></span></div>
+                <div class="card-body">
+                    <div id="drop-zone" class="plotter-drop-zone">
+                        <div class="plotter-drop-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <p style="margin:0;font-size:1.1rem;font-weight:500;color:var(--text-primary);">Drag & drop your
+                            file here</p>
+                        <p style="margin:0.25rem 0 0;font-size:0.9rem;">or <span
+                                style="color:var(--accent-blue);text-decoration:underline;cursor:pointer;">click to
+                                browse</span></p>
+                        <p style="margin:0.5rem 0 0;font-size:0.8rem;opacity:0.6;">Supports .csv, .xlsx, .xls &bull; Max
+                            10,000 rows</p><input type="file" id="file-input" accept=".csv,.xlsx,.xls"
+                            style="display:none;">
+                    </div>
+                    <div id="file-info" style="margin-top:1rem;text-align:center;"></div>
+                    <div id="sheet-selector-wrap" style="display:none;margin-top:1rem;"><label class="form-label"><i
+                                class="fas fa-layer-group"></i> Select Sheet</label><select class="form-select"
+                            id="sheet-selector"></select></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loading-spinner" style="display:none;text-align:center;padding:2rem;">
+        <div class="plotter-spinner"></div>
+        <p style="margin-top:1rem;color:var(--text-secondary);">Parsing your data...</p>
+    </div>
+    <div class="row plotter-fade-in" id="preview-section" style="display:none;">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header"><span><i class="fas fa-table"></i> Data Preview</span>
+                    <div style="display:flex;gap:0.5rem;"><span id="row-badge" class="plotter-stat-badge"></span><span
+                            id="col-badge" class="plotter-stat-badge"></span></div>
+                </div>
+                <div class="card-body" style="padding:0!important;">
+                    <div style="overflow-x:auto;max-height:300px;">
+                        <table class="table table-dark table-striped table-hover mb-0" id="data-table"
+                            style="font-size:0.85rem;">
+                            <thead id="table-head" style="position:sticky;top:0;z-index:2;"></thead>
+                            <tbody id="table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row plotter-fade-in" id="stats-section" style="display:none;">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header"><span><i class="fas fa-calculator"></i> Column Statistics</span><button
+                        class="btn btn-sm"
+                        style="background:rgba(102,126,234,0.2);color:var(--accent-blue);font-size:0.75rem;padding:0.25rem 0.75rem!important;"
+                        onclick="toggleStats()"><i class="fas fa-chevron-down" id="stats-toggle-icon"></i></button>
+                </div>
+                <div class="card-body" id="stats-body">
+                    <div id="stats-grid" class="plotter-stats-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row plotter-fade-in" id="controls-section" style="display:none;">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header"><i class="fas fa-sliders-h"></i> Chart Controls</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 col-md-6 col-lg-3 mb-3"><label class="form-label"><i
+                                    class="fas fa-arrows-alt-h"></i> X-Axis</label><select class="form-select"
+                                id="x-axis"></select></div>
+                        <div class="col-12 col-md-6 col-lg-3 mb-3"><label class="form-label"><i
+                                    class="fas fa-chart-bar"></i> Chart Type</label><select class="form-select"
+                                id="chart-type">
+                                <optgroup label="Standard">
+                                    <option value="bar">📊 Bar</option>
+                                    <option value="line">📈 Line</option>
+                                    <option value="scatter">🔵 Scatter</option>
+                                    <option value="area">🏔️ Area</option>
+                                </optgroup>
+                                <optgroup label="Circular">
+                                    <option value="pie">🥧 Pie</option>
+                                    <option value="doughnut">🍩 Doughnut</option>
+                                    <option value="polarArea">🎯 Polar</option>
+                                    <option value="radar">🕸️ Radar</option>
+                                </optgroup>
+                                <optgroup label="Advanced">
+                                    <option value="horizontalBar">📊 Horizontal</option>
+                                    <option value="stackedBar">📊 Stacked</option>
+                                </optgroup>
+                            </select></div>
+                        <div class="col-12 col-md-6 col-lg-3 mb-3"><label class="form-label"><i
+                                    class="fas fa-palette"></i> Color Theme</label><select class="form-select"
+                                id="color-theme">
+                                <option value="gradient">🌈 Gradient</option>
+                                <option value="ocean">🌊 Ocean</option>
+                                <option value="sunset">🌅 Sunset</option>
+                                <option value="forest">🌲 Forest</option>
+                                <option value="neon">💡 Neon</option>
+                                <option value="pastel">🎀 Pastel</option>
+                            </select></div>
+                        <div class="col-12 col-md-6 col-lg-3 mb-3"><label class="form-label"><i
+                                    class="fas fa-heading"></i> Chart Title</label><input type="text"
+                                class="form-control" id="chart-title" placeholder="Auto-generated..."></div>
+                    </div>
+                    <div class="mb-3"><label class="form-label"><i class="fas fa-arrows-alt-v"></i> Y-Axis
+                            Columns</label>
+                        <div id="y-axis-checkboxes" class="plotter-y-checkboxes"></div>
+                    </div>
+                    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;"><button class="btn btn-info" id="generate-btn"
+                            style="flex:1;min-width:200px;"><i class="fas fa-magic"></i> Generate Chart</button><button
+                            class="btn" id="download-png-btn"
+                            style="background:rgba(16,185,129,0.2);color:#10b981;display:none;"
+                            onclick="downloadChart('png')"><i class="fas fa-image"></i> PNG</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row plotter-fade-in" id="chart-section" style="display:none;">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header"><span><i class="fas fa-chart-area"></i> Chart</span></div>
+                <div class="card-body" style="position:relative;min-height:400px;"><canvas id="chart-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block scripts %}
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+    let pd = [], hd = [], ch = null, wb = null; const CT = { gradient: n => Array.from({ length: n }, (_, i) => `hsla(${(i * 360 / n) % 360},70%,60%,0.85)`), ocean: n => Array.from({ length: n }, (_, i) => `hsla(${190 + (i * 40 / n)},75%,${45 + (i * 25 / n)}%,0.85)`), sunset: n => Array.from({ length: n }, (_, i) => `hsla(${(i * 60 / n)},80%,${50 + (i * 15 / n)}%,0.85)`), forest: n => Array.from({ length: n }, (_, i) => `hsla(${100 + (i * 60 / n)},60%,${35 + (i * 25 / n)}%,0.85)`), neon: n => { const c = ['#ff006e', '#fb5607', '#ffbe0b', '#00f5d4', '#00bbf9', '#9b5de5']; return Array.from({ length: n }, (_, i) => c[i % c.length]); }, pastel: n => Array.from({ length: n }, (_, i) => `hsla(${(i * 360 / n) % 360},55%,75%,0.85)`) };
+    const dz = document.getElementById('drop-zone'), fi = document.getElementById('file-input'); dz.addEventListener('click', () => fi.click()); dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-active'); }); dz.addEventListener('dragleave', () => dz.classList.remove('drag-active')); dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-active'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); }); fi.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+    function handleFile(f) { const ext = f.name.split('.').pop().toLowerCase(); if (!['csv', 'xlsx', 'xls'].includes(ext)) { showError('Unsupported file type.'); return; } document.getElementById('file-info').innerHTML = `<span style="color:#10b981;"><i class="fas fa-check-circle"></i> ${f.name}</span>`; showLoading(true); if (ext === 'csv') { const r = new FileReader(); r.onload = e => { parseCSV(e.target.result); showLoading(false); }; r.readAsText(f); } else { const r = new FileReader(); r.onload = e => { parseXLSX(e.target.result); showLoading(false); }; r.readAsArrayBuffer(f); } }
+    function parseCSV(t) { const rows = []; let c = '', q = false; const lines = []; for (let i = 0; i < t.length; i++) { const ch = t[i]; if (ch === '"') { q = !q; c += ch; } else if ((ch === '\n' || ch === '\r') && !q) { if (c.trim()) lines.push(c); c = ''; if (ch === '\r' && t[i + 1] === '\n') i++; } else c += ch; } if (c.trim()) lines.push(c); for (const l of lines) { const fs = []; let f = '', q2 = false; for (let i = 0; i < l.length; i++) { const ch = l[i]; if (ch === '"') { if (q2 && l[i + 1] === '"') { f += '"'; i++; } else q2 = !q2; } else if (ch === ',' && !q2) { fs.push(f.trim()); f = ''; } else f += ch; } fs.push(f.trim()); rows.push(fs); } if (rows.length < 2) return; hd = rows[0]; pd = []; for (let i = 1; i < Math.min(rows.length, 10001); i++) { if (rows[i].length === hd.length) { const r = {}; hd.forEach((h, idx) => r[h] = rows[i][idx]); pd.push(r); } } wb = null; onDataReady(); }
+    function parseXLSX(b) { try { wb = XLSX.read(b, { type: 'array' }); } catch (e) { showError('Parse error'); return; } const ss = wb.SheetNames; const sw = document.getElementById('sheet-selector-wrap'), sl = document.getElementById('sheet-selector'); if (ss.length > 1) { sl.innerHTML = ss.map(n => `<option value="${n}">${n}</option>`).join(''); sw.style.display = 'block'; sl.onchange = () => loadSheet(sl.value); } else sw.style.display = 'none'; loadSheet(ss[0]); }
+    function loadSheet(n) { const ws = wb.Sheets[n], j = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }); if (j.length < 2) return; hd = j[0].map(h => String(h).trim()); pd = []; for (let i = 1; i < Math.min(j.length, 10001); i++) { if (j[i].length >= hd.length) { const r = {}; hd.forEach((h, idx) => r[h] = j[i][idx] != null ? String(j[i][idx]) : ''); pd.push(r); } } onDataReady(); }
+    function onDataReady() { displayPreview(); populateControls(); computeStats(); showSection('preview-section'); showSection('stats-section'); showSection('controls-section'); }
+    function displayPreview() { document.getElementById('table-head').innerHTML = '<tr>' + hd.map(h => `<th style="white-space:nowrap;background:var(--bg-secondary);color:var(--accent-blue);font-size:0.8rem;">${esc(h)}</th>`).join('') + '</tr>'; document.getElementById('table-body').innerHTML = pd.slice(0, 10).map(r => '<tr>' + hd.map(h => `<td style="white-space:nowrap;">${esc(r[h])}</td>`).join('') + '</tr>').join(''); document.getElementById('row-badge').innerHTML = `<i class="fas fa-list"></i> ${pd.length} rows`; document.getElementById('col-badge').innerHTML = `<i class="fas fa-columns"></i> ${hd.length} cols`; }
+    function populateControls() { document.getElementById('x-axis').innerHTML = hd.map(h => `<option value="${esc(h)}">${esc(h)}</option>`).join(''); const nc = hd.filter(h => pd.slice(0, 20).some(r => !isNaN(parseFloat(r[h])) && r[h] !== '')); document.getElementById('y-axis-checkboxes').innerHTML = hd.map(h => { const isn = nc.includes(h), ck = nc.length > 0 && h === nc[0] ? 'checked' : ''; return `<label class="plotter-y-label${isn ? '' : ' non-numeric'}"><input type="checkbox" name="y-col" value="${esc(h)}" ${ck}><span>${esc(h)}</span></label>`; }).join(''); }
+    function computeStats() { const g = document.getElementById('stats-grid'), nc = hd.filter(h => pd.slice(0, 50).some(r => !isNaN(parseFloat(r[h])) && r[h] !== '')); if (!nc.length) { g.innerHTML = '<p>No numeric columns.</p>'; return; } g.innerHTML = nc.map(c => { const v = pd.map(r => parseFloat(r[c])).filter(v => !isNaN(v)), cnt = v.length, mn = cnt ? Math.min(...v) : 0, mx = cnt ? Math.max(...v) : 0, sm = v.reduce((a, b) => a + b, 0), avg = cnt ? sm / cnt : 0; return `<div class="plotter-stat-card"><div class="plotter-stat-title">${esc(c)}</div><div class="plotter-stat-row"><span>Count</span><span>${cnt}</span></div><div class="plotter-stat-row"><span>Min</span><span>${fmt(mn)}</span></div><div class="plotter-stat-row"><span>Max</span><span>${fmt(mx)}</span></div><div class="plotter-stat-row"><span>Mean</span><span>${fmt(avg)}</span></div></div>`; }).join(''); }
+    let sc = false; function toggleStats() { sc = !sc; document.getElementById('stats-body').style.display = sc ? 'none' : 'block'; }
+    document.getElementById('generate-btn').addEventListener('click', generateChart);
+    function generateChart() { const xc = document.getElementById('x-axis').value, ct = document.getElementById('chart-type').value, ti = document.getElementById('color-theme').value, tt = document.getElementById('chart-title').value; const yc = Array.from(document.querySelectorAll('input[name="y-col"]:checked')).map(c => c.value); if (!yc.length) { showError('Select a Y column'); return; } const lb = pd.map(r => r[xc]), ic = ['pie', 'doughnut', 'polarArea', 'radar'].includes(ct); const ds = yc.map((y, si) => { const rd = pd.map(r => parseFloat(r[y]) || 0), cf = CT[ti] || CT.gradient, sc = cf(ic ? rd.length : yc.length), bc = ic ? sc : (sc[si] || sc[0]); return { label: y, data: ct === 'scatter' ? pd.map(r => ({ x: parseFloat(r[xc]) || 0, y: parseFloat(r[y]) || 0 })) : rd, backgroundColor: ic ? sc : bc, borderColor: ic ? sc.map(c => c.replace('0.85', '1')) : bc, borderWidth: ct === 'line' || ct === 'area' ? 3 : 1, fill: ct === 'area', tension: 0.4, pointRadius: ct === 'scatter' ? 5 : 3 }; }); let at = ct; if (ct === 'area') at = 'line'; if (ct === 'horizontalBar' || ct === 'stackedBar') at = 'bar'; showSection('chart-section'); if (ch) ch.destroy(); const cfg = { type: at, data: { labels: ct === 'scatter' ? undefined : lb, datasets: ds }, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: tt || (yc.length === 1 ? `${yc[0]} by ${xc}` : `${yc.join(', ')} by ${xc}`), color: '#fff', font: { size: 18, weight: '600', family: 'Inter' } }, legend: { display: yc.length > 1 || ic, labels: { color: '#a0a0b0', usePointStyle: true } }, tooltip: { backgroundColor: 'rgba(15,15,26,0.95)', cornerRadius: 8 } }, scales: ic ? {} : { x: { ticks: { color: '#a0a0b0', maxTicksLimit: 20 }, grid: { color: 'rgba(255,255,255,0.06)' } }, y: { ticks: { color: '#a0a0b0' }, grid: { color: 'rgba(255,255,255,0.06)' }, stacked: ct === 'stackedBar' } } } }; if (ct === 'horizontalBar') cfg.options.indexAxis = 'y'; if (ct === 'stackedBar') cfg.options.scales.x.stacked = true; ch = new Chart(document.getElementById('chart-canvas').getContext('2d'), cfg); document.getElementById('download-png-btn').style.display = 'inline-flex'; }
+    function downloadChart(f) { if (!ch) return; const l = document.createElement('a'); l.download = 'chart.png'; l.href = document.getElementById('chart-canvas').toDataURL('image/png', 1.0); l.click(); }
+    function showSection(id) { const e = document.getElementById(id); e.style.display = 'block'; e.style.opacity = '0'; e.style.transform = 'translateY(20px)'; requestAnimationFrame(() => { e.style.transition = 'opacity 0.5s,transform 0.5s'; e.style.opacity = '1'; e.style.transform = 'translateY(0)'; }); }
+    function showLoading(s) { document.getElementById('loading-spinner').style.display = s ? 'block' : 'none'; if (s) ['preview-section', 'stats-section', 'controls-section', 'chart-section'].forEach(id => document.getElementById(id).style.display = 'none'); }
+    function showError(m) { document.getElementById('file-info').innerHTML = `<span style="color:#ef4444;"><i class="fas fa-exclamation-circle"></i> ${m}</span>`; showLoading(false); }
+    function esc(s) { return s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function fmt(n) { return Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+</script>
+{% endblock scripts %}

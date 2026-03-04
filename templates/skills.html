@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="position:relative;z-index:1;">
+    <div class="row">
+        <div class="col-12">
+            <h2>Technical Skills</h2>
+            <p class="mb-4">A diverse toolkit spanning full-stack development, cloud infrastructure, and AI/ML.</p>
+        </div>
+    </div>
+    <div class="row">
+        {% for cat in skills %}
+        <div class="col-12 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">{{ cat.icon }} {{ cat.name }}</div>
+                <div class="card-body">
+                    {% for skill in cat.skills %}<span class="skill-badge {{ skill.category }}">{{ skill.name
+                        }}</span>{% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

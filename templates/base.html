@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Prashanth Kumar Kadasi - Data Analyst & AI Developer">
+    <title>{{ title }}</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' rx='20' width='100' height='100'/><text x='50' y='65' font-family='Arial' font-size='45' font-weight='bold' fill='white' text-anchor='middle'>PK</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.2/dist/darkly/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/custom.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Prashanth Kadasi</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link {% if current_path == '/' %}active{% endif %}" href="/">About Me</a></li>
+                    <li class="nav-item"><a class="nav-link {% if current_path == '/skills' %}active{% endif %}" href="/skills">Skills</a></li>
+                    <li class="nav-item"><a class="nav-link {% if current_path == '/projects' %}active{% endif %}" href="/projects">Projects</a></li>
+                    <li class="nav-item"><a class="nav-link {% if current_path == '/resume' %}active{% endif %}" href="/resume">Resume</a></li>
+                    <li class="nav-item"><a class="nav-link {% if current_path == '/blog' %}active{% endif %}" href="/blog">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link {% if current_path == '/plotter' %}active{% endif %}" href="/plotter"><i class="fas fa-chart-line" style="margin-right:4px;"></i>Data Plotter</a></li>
+                    <li class="nav-item ms-2"><button class="btn btn-outline-light btn-sm theme-toggle" id="themeToggle" title="Toggle theme"><i class="fas fa-moon" id="themeIcon"></i></button></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main class="container-fluid py-4">{% block content %}{% endblock content %}</main>
+    <footer class="text-center py-4" style="border-top:1px solid var(--border-glass);margin-top:2rem;">
+        <p style="color:var(--text-secondary);margin:0;">© <script>document.write(new Date().getFullYear())</script>
+        <span style="background:var(--accent-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:600;">Prashanth Kumar Kadasi</span>
+        • Built with <span style="background:var(--accent-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:600;">Rust + Actix</span>
+        & <span style="background:var(--accent-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:600;">Claude Opus</span></p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    const tg=document.getElementById('themeToggle'),ti=document.getElementById('themeIcon'),ht=document.documentElement;
+    const st=localStorage.getItem('theme')||'dark';ht.setAttribute('data-theme',st);ui(st);
+    tg.addEventListener('click',()=>{const c=ht.getAttribute('data-theme'),n=c==='dark'?'light':'dark';ht.setAttribute('data-theme',n);localStorage.setItem('theme',n);ui(n);});
+    function ui(t){ti.className=t==='dark'?'fas fa-moon':'fas fa-sun';}
+    </script>
+    <canvas id="network-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+    <script>
+    (function(){const c=document.getElementById('network-canvas'),x=c.getContext('2d');let w,h,m={x:0,y:0},ps=[];function dk(){return document.documentElement.getAttribute('data-theme')!=='light';}class P{constructor(){this.x=Math.random()*w;this.y=Math.random()*h;this.vx=(Math.random()-0.5)*0.5;this.vy=(Math.random()-0.5)*0.5;this.s=Math.random()*2+1;}update(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>w)this.vx*=-1;if(this.y<0||this.y>h)this.vy*=-1;}draw(){x.fillStyle=dk()?'rgba(255,255,255,0.5)':'rgba(120,130,160,0.35)';x.beginPath();x.arc(this.x,this.y,this.s,0,Math.PI*2);x.fill();}}function init(){ps=[];const n=Math.floor((w*h)/15000);for(let i=0;i<n;i++)ps.push(new P());}function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight;init();}function conn(){const d=dk();for(let a=0;a<ps.length;a++){const dx=ps[a].x-m.x,dy=ps[a].y-m.y,dm=Math.sqrt(dx*dx+dy*dy);if(dm<150){const o=1-(dm/150);x.strokeStyle=d?`rgba(100,200,255,${o*0.8})`:`rgba(60,130,220,${o*0.6})`;x.lineWidth=2;x.beginPath();x.moveTo(ps[a].x,ps[a].y);x.lineTo(m.x,m.y);x.stroke();}for(let b=a+1;b<ps.length;b++){const dx2=ps[a].x-ps[b].x,dy2=ps[a].y-ps[b].y,dist=Math.sqrt(dx2*dx2+dy2*dy2);if(dist<120){const o=1-(dist/120);x.strokeStyle=d?`rgba(255,255,255,${o*0.15})`:`rgba(100,110,140,${o*0.12})`;x.lineWidth=1;x.beginPath();x.moveTo(ps[a].x,ps[a].y);x.lineTo(ps[b].x,ps[b].y);x.stroke();}}}}function anim(){x.clearRect(0,0,w,h);ps.forEach(p=>{p.update();p.draw();});conn();requestAnimationFrame(anim);}window.addEventListener('resize',resize);window.addEventListener('mousemove',e=>{m.x=e.clientX;m.y=e.clientY;});resize();anim();})();
+    </script>
+    {% block scripts %}{% endblock scripts %}
+</body>
+</html>
