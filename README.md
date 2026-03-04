@@ -1,59 +1,53 @@
 # kprsnt.in — Rust + Actix-web Version
 
-Portfolio website built with **Rust + Actix-web**, featuring the same design as the Astro and Laravel versions.
+Portfolio website built with **Rust + Actix-web** — blazing fast server-side rendering.
 
 ## Tech Stack
-- **Backend**: Rust, Actix-web 4 (one of the fastest web frameworks)
+- **Backend**: Rust, Actix-web 4
 - **Templates**: Tera (Jinja2-like syntax)
 - **Styling**: Bootstrap Darkly + custom CSS (glassmorphism)
 - **AI**: Gemini API via reqwest HTTP client
 
-## Why Rust?
-- **Blazing fast** — sub-millisecond response times
-- **Single binary** — no runtime dependencies
-- **Memory safe** — no garbage collector, zero-cost abstractions
-- **Actix-web** — consistently top performer in TechEmpower benchmarks
-
 ## Local Setup
-
 ```bash
-# Build and run
-cargo run
-
-# Or build optimized release
-cargo build --release
-./target/release/kprsnt-portfolio
-
-# Server runs at http://localhost:8080
+cargo run                    # http://localhost:8080
+cargo build --release        # Optimized binary
 ```
 
-## Environment Variables
+## Deploy to Cloudflare
 
-| Variable | Description |
-|---|---|
-| `PORT` | Server port (default: 8080) |
-| `GEMINI_API_KEY` | Google Gemini API key for AI Insight |
+### Option A: Cloudflare Tunnel + VPS (Recommended)
 
-## Deploy to Vercel
+Run the Rust binary on a VPS and expose via Cloudflare Tunnel:
 
-> **Note**: Vercel doesn't natively run Rust servers. Best deployment options:
+```bash
+# Build on VPS
+cargo build --release
 
-### Option A: Railway (Recommended)
+# Install cloudflared
+curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
+chmod +x /usr/local/bin/cloudflared
 
-1. Connect your GitHub repo at [railway.app](https://railway.app)
-2. Railway auto-detects Rust and builds with `cargo build --release`
-3. Set environment variables: `PORT`, `GEMINI_API_KEY`
-4. Push and deploy — Railway handles the rest
+# Create tunnel
+cloudflared tunnel login
+cloudflared tunnel create rust-portfolio
+cloudflared tunnel route dns rust-portfolio your-domain.com
 
-### Option B: Shuttle.rs (Rust-native hosting)
+# Run
+GEMINI_API_KEY=your-key PORT=8080 ./target/release/kprsnt-portfolio &
+cloudflared tunnel run --url http://localhost:8080 rust-portfolio
+```
 
-1. Install Shuttle CLI: `cargo install cargo-shuttle`
-2. Deploy: `cargo shuttle deploy`
+### Option B: Railway (Easiest)
 
-### Option C: Fly.io
+1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
+2. Select `rash-rust` repo
+3. Railway auto-detects Rust and runs `cargo build --release`
+4. Set env: `PORT=8080`, `GEMINI_API_KEY`
+5. Point Cloudflare DNS to Railway's URL
 
-1. Install flyctl: `curl -L https://fly.io/install.sh | sh`
-2. Create a `Dockerfile`:
+### Option C: Docker + Fly.io
+
 ```dockerfile
 FROM rust:1.77 as builder
 WORKDIR /app
@@ -66,28 +60,32 @@ COPY --from=builder /app/target/release/kprsnt-portfolio /usr/local/bin/
 COPY --from=builder /app/templates /app/templates
 COPY --from=builder /app/static /app/static
 WORKDIR /app
+ENV PORT=8080
 CMD ["kprsnt-portfolio"]
 ```
-3. Deploy: `fly launch && fly deploy`
-
-### Option D: Docker (any VPS)
 
 ```bash
-docker build -t portfolio-rust .
-docker run -p 8080:8080 -e GEMINI_API_KEY=your-key portfolio-rust
+fly launch && fly deploy
 ```
 
+Then point Cloudflare DNS to your Fly.io URL.
+
+## Environment Variables
+
+| Variable | Description |
+|---|---|
+| `PORT` | Server port (default: 8080) |
+| `GEMINI_API_KEY` | Google Gemini API key |
+
 ## Pages
-- `/` — About Me (home)
+- `/` — About Me
 - `/skills` — Technical Skills
 - `/projects` — Project Portfolio
-- `/resume` — Resume / CV
+- `/resume` — Resume
 - `/blog` — Blog listing
 - `/blog/{slug}` — Blog post
-- `/plotter` — Interactive Data Plotter
+- `/plotter` — Data Plotter
 - `POST /api/ai-insight` — AI Insight API
 
 ## Performance
-Actix-web is one of the fastest web frameworks available. Expected response times:
-- Static pages: **< 1ms**
-- AI Insight API: **1-3s** (waiting for Gemini API)
+Actix-web delivers sub-millisecond response times for all pages.
